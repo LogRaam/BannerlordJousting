@@ -1,4 +1,4 @@
-﻿// Code written by Gabriel Mailhot, 23/01/2021.
+﻿// Code written by Gabriel Mailhot, 02/02/2021.
 
 #region
 
@@ -13,7 +13,7 @@ using TaleWorlds.MountAndBlade;
 namespace LogRaamJousting
 {
    [HarmonyPatch(typeof(TournamentFightMissionController), "PrepareForMatch")]
-   public class JoustingPrepareForMatch
+   public class PrefixPatch
    {
       #region private
 
@@ -23,7 +23,7 @@ namespace LogRaamJousting
 
          foreach (TournamentTeam tournamentTeam in ____match.Teams)
             foreach (TournamentParticipant participant in tournamentTeam.Participants)
-               JoustingEquipParticipant.EquipParticipant(__instance, ____culture, participant);
+               Runtime.Participant.EquipParticipant(____culture, participant);
 
          return false;
       }

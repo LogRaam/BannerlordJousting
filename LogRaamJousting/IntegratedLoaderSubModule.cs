@@ -28,7 +28,6 @@ namespace LogRaamJousting
       {
          base.OnSubModuleLoad();
          _harmony.PatchAll(Assembly.GetExecutingAssembly());
-         //_harmony.Patch(AccessTools.Method(typeof(Agent), "EquipItemsFromSpawnEquipment"), null, null, new HarmonyMethod(AccessTools.Method(typeof(AgentEquipItemsFromSpawnEquipmentPatch), "Transpiler")));
       }
    }
 }
