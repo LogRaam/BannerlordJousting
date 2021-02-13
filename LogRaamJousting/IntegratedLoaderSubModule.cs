@@ -20,7 +20,7 @@ namespace LogRaamJousting
       protected override void OnBeforeInitialModuleScreenSetAsRoot()
       {
          base.OnBeforeInitialModuleScreenSetAsRoot();
-         InformationManager.DisplayMessage(new InformationMessage("LogRaam's Jousting is ready", Colors.Yellow));
+         InformationManager.DisplayMessage(new InformationMessage("Jousting activated!", Colors.Green));
       }
 
 

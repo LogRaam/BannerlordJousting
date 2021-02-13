@@ -2,7 +2,9 @@
 
 #region
 
-using System.Linq;
+using System;
+using LogRaamJousting.Avatar;
+using LogRaamJousting.Contract;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.SandBox.Source.TournamentGames;
 using TaleWorlds.Core;
@@ -13,923 +15,421 @@ namespace LogRaamJousting
 {
    public class JoustParticipant
    {
-      private CultureObject _culture = new CultureObject();
-
-
-      internal void EquipParticipant(CultureObject cultureObject, TournamentParticipant participant)
+      internal void EquipParticipant(TournamentParticipant participant)
       {
-         _culture = cultureObject;
          participant.MatchEquipment = Equip(participant);
       }
 
       #region private
 
-      private Equipment AssignEquipment(EquipmentElement weapon0, EquipmentElement weapon1, EquipmentElement? weapon2, EquipmentElement? weapon3, EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes)
+      private Equipment CulturalEventGears(TournamentParticipant participant)
       {
-         var result = new Equipment();
-
-         result.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Weapon0, weapon0);
-         result.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Weapon1, weapon1);
-         if (weapon2 != null) result.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Weapon2, (EquipmentElement) weapon2);
-         if (weapon3 != null) result.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Weapon3, (EquipmentElement) weapon3);
-
-         if (_culture.GetCultureCode() == CultureCode.Battania)
-            if (Runtime.Config.Option == Options.DRESSED || Runtime.Config.Option == Options.UNDRESSEDEMPIRE)
-               AssignGears(bodyArmor, headArmor, shoes, ref result);
-
-         if (_culture.GetCultureCode() == CultureCode.Empire)
-            if (Runtime.Config.Option == Options.DRESSED || Runtime.Config.Option == Options.UNDRESSEDBATTANIA)
-               AssignGears(bodyArmor, headArmor, shoes, ref result);
-
-         if (_culture.GetCultureCode() != CultureCode.Battania && _culture.GetCultureCode() != CultureCode.Empire && Runtime.Config.Option != Options.UNDRESSED) AssignGears(bodyArmor, headArmor, shoes, ref result);
-
-         return result;
-      }
-
-      private void AssignGears(EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes, ref Equipment result)
-      {
-         result.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Body, bodyArmor);
-         result.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Head, headArmor);
-         result.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Leg, shoes);
-      }
-
-      private void BuildMount(ref Equipment equipment, TournamentParticipant participant)
-      {
-         switch (participant.Character.Culture.GetCultureCode())
+         switch (Runtime.HostCulture)
          {
-            case CultureCode.Aserai:
-               if (LogRaamRandom.EvalPercentage(50))
-               {
-                  equipment.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Horse, new EquipmentElement(Runtime.Equipment.AseraiMounts.GetRandomElement()));
-                  equipment.AddEquipmentToSlotWithoutAgent(EquipmentIndex.HorseHarness, new EquipmentElement(Runtime.Equipment.Saddles.Find(n => n.StringId.Contains("camel"))));
-               }
-               else
-               {
-                  equipment.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Horse, new EquipmentElement(Runtime.Equipment.EmpireMounts.GetRandomElement()));
-                  equipment.AddEquipmentToSlotWithoutAgent(EquipmentIndex.HorseHarness, new EquipmentElement(Runtime.Equipment.Saddles.Find(n => !n.StringId.Contains("camel"))));
-               }
-
-               return;
-            case CultureCode.Empire:
-               equipment.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Horse, new EquipmentElement(Runtime.Equipment.EmpireMounts.GetRandomElement()));
-
-               break;
-            case CultureCode.Sturgia:
-               equipment.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Horse, new EquipmentElement(Runtime.Equipment.SturgiaMounts.GetRandomElement()));
-
-               break;
-
+            case CultureCode.Empire:  return new HeavyOneHanded(participant).Equipment;
+            case CultureCode.Sturgia: return new Wrestler().Equipment;
+            case CultureCode.Aserai:  return new HeavyThrower(participant).Equipment;
             case CultureCode.Vlandia:
-               equipment.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Horse, new EquipmentElement(Runtime.Equipment.VlandiaMounts.GetRandomElement()));
+            {
+               var p = new HeavyPolearm(participant);
+               p.AddMount();
 
-               break;
+               return p.Equipment;
+            }
             case CultureCode.Khuzait:
-               equipment.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Horse, new EquipmentElement(Runtime.Equipment.KhuzaitMounts.GetRandomElement()));
+            {
+               var p = new LightArcher(participant);
+               p.AddMount();
 
-               break;
-            case CultureCode.Battania:
-               equipment.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Horse, new EquipmentElement(Runtime.Equipment.BattaniaMounts.GetRandomElement()));
-
-               break;
+               return p.Equipment;
+            }
+            case CultureCode.Battania: return new HeavyTwoHanded(participant).Equipment;
          }
 
-         equipment.AddEquipmentToSlotWithoutAgent(EquipmentIndex.HorseHarness, new EquipmentElement(Runtime.Equipment.Saddles.Find(n => !n.StringId.Contains("camel"))));
+         throw new AppDomainUnloadedException("JOUSTING: Error, cannot setup a cultural event because culture code is not recognized. Please report this issue to LogRaam.");
       }
 
       private Equipment Equip(TournamentParticipant participant)
       {
+         //return new LightTwoHanded(participant.Character.Culture.GetCultureCode()).Equipment; //for testing only
+
+         if (Runtime.IsCulturalEvent) return CulturalEventGears(participant);
+
          if (participant.IsPlayer) return EquipPlayer(participant);
 
          switch (participant.Character.Culture.GetCultureCode())
          {
-            case CultureCode.Empire: return EquipEmpire(participant);
-            case CultureCode.Sturgia: return EquipSturgia(participant);
-            case CultureCode.Aserai: return EquipAserai(participant);
-            case CultureCode.Vlandia: return EquipVlandia(participant);
-            case CultureCode.Khuzait: return EquipKhuzait(participant);
+            case CultureCode.Empire:   return EquipEmpire(participant);
+            case CultureCode.Sturgia:  return EquipSturgia(participant);
+            case CultureCode.Aserai:   return EquipAserai(participant);
+            case CultureCode.Vlandia:  return EquipSturgia(participant);
+            case CultureCode.Khuzait:  return EquipKhuzait(participant);
             case CultureCode.Battania: return EquipBattanian(participant);
          }
 
-         return EquipUnknown(participant);
+         return EquipPlayer(participant);
       }
 
       private Equipment EquipAserai(TournamentParticipant participant)
       {
-         if (participant.Character.IsMounted) return EquipAseraiMounted(participant);
-         if (participant.Character.IsArcher) return EquipAseraiArcher();
+         if (participant.Character.Occupation == Occupation.Lord) return EquipAseraiLord(participant);
 
-         int i = LogRaamRandom.GenerateRandomNumber(50);
+         IWeaponUser p = null;
+         if (participant.Character.IsArcher)
+            p = LogRaamRandom.EvalPercentage(25)
+               ? new HeavyArcher(participant)
+               : new LightArcher(participant);
 
-         if (i <= 5) return EquipAseraiTwoHander();
-         if (i <= 25) return EquipAseraiOneHander();
-         if (i <= 30) return EquipAseraiPolearm();
+         int i = LogRaamRandom.GenerateRandomNumber(40);
 
-         return EquipAseraiThrower();
+         if (i <= 10)
+            p = LogRaamRandom.EvalPercentage(25)
+               ? new HeavyTwoHanded(participant)
+               : new LightTwoHanded(participant);
+
+         else if (i <= 20)
+            p = LogRaamRandom.EvalPercentage(75)
+               ? new HeavyOneHanded(participant)
+               : new LightOneHanded(participant);
+
+         else if (i <= 30)
+            p = LogRaamRandom.EvalPercentage(50)
+               ? new HeavyThrower(participant)
+               : new LightThrower(participant);
+
+         else if (i <= 40)
+            p = LogRaamRandom.EvalPercentage(50)
+               ? new HeavyPolearm(participant)
+               : new LightPolearm(participant);
+
+
+         if (participant.Character.IsMounted) p.AddMount();
+
+         return p.Equipment;
       }
 
-      private Equipment EquipAseraiArcher()
+      private Equipment EquipAseraiLord(TournamentParticipant participant)
       {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.Bow.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Arrows.ToList().GetRandomElement());
-         EquipmentElement weapon2 = weapon1;
-         var weapon3 = new EquipmentElement(Runtime.Equipment.Polearm.GetRandomElement());
+         IWeaponUser p = null;
 
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipAseraiGears();
+         int i = LogRaamRandom.GenerateRandomNumber(40);
 
-         return new Equipment(AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes));
+         if (i <= 10) p = new HeavyTwoHanded(participant);
+
+         else if (i <= 20) p = new HeavyOneHanded(participant);
+
+         else if (i <= 40) p = new HeavyPolearm(participant);
+
+         p.AddMount();
+
+         return p.Equipment;
       }
 
-      private (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) EquipAseraiGears()
+      private Equipment EquipBattaniaLord(TournamentParticipant participant)
       {
-         var bodyArmor = new EquipmentElement(Runtime.Equipment.AseraiBodyArmors.GetRandomElement());
-         var headArmor = new EquipmentElement(Runtime.Equipment.AseraiHeadArmors.GetRandomElement());
-         var shoes = new EquipmentElement(Runtime.Equipment.Boots.GetRandomElement());
+         IWeaponUser p = null;
 
-         return (bodyArmor, headArmor, shoes);
+         int i = LogRaamRandom.GenerateRandomNumber(30);
+
+         if (i <= 10) p = new HeavyTwoHanded(participant);
+
+         else if (i <= 20) p = new HeavyOneHanded(participant);
+
+         else if (i <= 40) p = new HeavyPolearm(participant);
+
+
+         p.AddMount();
+
+         return p.Equipment;
       }
 
-      private Equipment EquipAseraiMounted(TournamentParticipant participant)
-      {
-         EquipmentElement weapon0;
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-
-         if (LogRaamRandom.EvalPercentage(50))
-         {
-            weapon0 = new EquipmentElement(Runtime.Equipment.Polearm.Find(n => n.StringId.Contains("spear")));
-         }
-         else if (LogRaamRandom.EvalPercentage(50))
-         {
-            weapon0 = new EquipmentElement(Runtime.Equipment.OneHanded.Where(n => n.StringId.Contains("sword")).ToList().GetRandomElement());
-         }
-         else if (LogRaamRandom.EvalPercentage(50))
-         {
-            weapon0 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-            weapon2 = new EquipmentElement(Runtime.Equipment.Polearm.Find(n => n.StringId == "bo_staff"));
-         }
-         else
-         {
-            weapon0 = new EquipmentElement(Runtime.Equipment.Bow.GetRandomElement());
-            weapon2 = new EquipmentElement(Runtime.Equipment.Arrows.GetRandomElement());
-            weapon3 = new EquipmentElement(Runtime.Equipment.Arrows.GetRandomElement());
-         }
-
-         var weapon1 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipAseraiGears();
-
-         Equipment result = AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-         BuildMount(ref result, participant);
-
-         return result;
-      }
-
-      private Equipment EquipAseraiOneHander()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.OneHanded.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipAseraiGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipAseraiPolearm()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.Polearm.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipAseraiGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipAseraiThrower()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-         EquipmentElement weapon1 = weapon0;
-         EquipmentElement weapon2 = weapon0;
-         var weapon3 = new EquipmentElement(Runtime.Equipment.Polearm.Find(n => n.StringId == "bo_staff"));
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipAseraiGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipAseraiTwoHander()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.TwoHanded.Where(n => !n.StringId.Contains("axe") || !n.StringId.Contains("sword")).ToList().GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipAseraiGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) EquipBattaniaGears()
-      {
-         var bodyArmor = new EquipmentElement(Runtime.Equipment.BattaniaBodyArmors.GetRandomElement());
-         var headArmor = new EquipmentElement(Runtime.Equipment.BattaniaHeadArmors.GetRandomElement());
-         var shoes = new EquipmentElement(Runtime.Equipment.Boots.GetRandomElement());
-
-         return (bodyArmor, headArmor, shoes);
-      }
 
       private Equipment EquipBattanian(TournamentParticipant participant)
       {
-         if (participant.Character.IsArcher) return EquipBattanianArcher();
-         if (participant.Character.IsMounted) return EquipBattanianMounted(participant);
+         if (participant.Character.Occupation == Occupation.Lord) return EquipBattaniaLord(participant);
 
-         int i = LogRaamRandom.GenerateRandomNumber(100);
+         IWeaponUser p = null;
+         if (participant.Character.IsArcher)
+            p = LogRaamRandom.EvalPercentage(50)
+               ? new HeavyArcher(participant)
+               : new LightArcher(participant);
 
-         if (i <= 75) return EquipBattanianTwoHander();
+         int i = LogRaamRandom.GenerateRandomNumber(40);
 
-         return EquipBattanianOneHander();
+         if (i <= 10)
+            p = LogRaamRandom.EvalPercentage(75)
+               ? new HeavyTwoHanded(participant)
+               : new LightTwoHanded(participant);
+
+         else if (i <= 20)
+            p = LogRaamRandom.EvalPercentage(50)
+               ? new HeavyOneHanded(participant)
+               : new LightOneHanded(participant);
+
+         else if (i <= 30)
+            p = LogRaamRandom.EvalPercentage(25)
+               ? new HeavyThrower(participant)
+               : new LightThrower(participant);
+
+         else if (i <= 40)
+            p = LogRaamRandom.EvalPercentage(25)
+               ? new HeavyPolearm(participant)
+               : new LightPolearm(participant);
+
+
+         if (participant.Character.IsMounted) p.AddMount();
+
+         return p.Equipment;
       }
 
-      private Equipment EquipBattanianArcher()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.Bow.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Arrows.GetRandomElement());
-         EquipmentElement weapon2 = weapon1;
-         var weapon3 = new EquipmentElement(Runtime.Equipment.Polearm.GetRandomElement());
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipBattaniaGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipBattanianMounted(TournamentParticipant participant)
-      {
-         EquipmentElement weapon0;
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-
-         if (LogRaamRandom.EvalPercentage(50))
-         {
-            weapon0 = new EquipmentElement(Runtime.Equipment.Polearm.GetRandomElement());
-         }
-         else if (LogRaamRandom.EvalPercentage(50))
-         {
-            weapon0 = new EquipmentElement(Runtime.Equipment.OneHanded.Where(n => n.StringId.Contains("sword")).ToList().GetRandomElement());
-         }
-         else
-         {
-            weapon0 = new EquipmentElement(Runtime.Equipment.Bow.GetRandomElement());
-            weapon2 = new EquipmentElement(Runtime.Equipment.Arrows.GetRandomElement());
-            weapon3 = new EquipmentElement(Runtime.Equipment.Arrows.GetRandomElement());
-         }
-
-         var weapon1 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipBattaniaGears();
-
-         Equipment result = AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-         BuildMount(ref result, participant);
-
-         return result;
-      }
-
-      private Equipment EquipBattanianOneHander()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.OneHanded.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipBattaniaGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipBattanianPolearm()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.TwoHanded.Where(n => !n.StringId.Contains("spear")).ToList().GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipBattaniaGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipBattanianThrower()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-         EquipmentElement weapon1 = weapon0;
-         EquipmentElement weapon2 = weapon0;
-         var weapon3 = new EquipmentElement(Runtime.Equipment.Polearm.Find(n => n.StringId == "bo_staff"));
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipBattaniaGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipBattanianTwoHander()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.TwoHanded.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipBattaniaGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
 
       private Equipment EquipEmpire(TournamentParticipant participant)
       {
-         if (participant.Character.IsArcher) return EquipEmpireArcher();
-         if (participant.Character.IsMounted) return EquipEmpireMounted(participant);
+         if (participant.Character.Occupation == Occupation.Lord) return EquipEmpireLord(participant);
 
-         int i = LogRaamRandom.GenerateRandomNumber(100);
+         IWeaponUser p = null;
 
-         if (i <= 10) return EquipEmpireTwoHander();
-         if (i <= 33) return EquipEmpireOneHander();
-         if (i <= 66) return EquipEmpirePolearm();
+         if (participant.Character.IsArcher)
+            p = LogRaamRandom.EvalPercentage(25)
+               ? new HeavyArcher(participant)
+               : new LightArcher(participant);
 
-         return EquipEmpireThrower();
+         int i = LogRaamRandom.GenerateRandomNumber(40);
+
+         if (i <= 10)
+            p = LogRaamRandom.EvalPercentage(50)
+               ? new HeavyTwoHanded(participant)
+               : new LightTwoHanded(participant);
+
+         else if (i <= 20)
+            p = LogRaamRandom.EvalPercentage(75)
+               ? new HeavyOneHanded(participant)
+               : new LightOneHanded(participant);
+
+         else if (i <= 30)
+            p = LogRaamRandom.EvalPercentage(50)
+               ? new HeavyThrower(participant)
+               : new LightThrower(participant);
+
+         else if (i <= 40)
+            p = LogRaamRandom.EvalPercentage(25)
+               ? new HeavyPolearm(participant)
+               : new LightPolearm(participant);
+
+
+         if (participant.Character.IsMounted) p.AddMount();
+
+         return p.Equipment;
       }
 
-      private Equipment EquipEmpireArcher()
+      private Equipment EquipEmpireLord(TournamentParticipant participant)
       {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.Bow.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Arrows.Find(n => n.StringId == "tournament_arrows"));
-         EquipmentElement weapon2 = weapon1;
-         var weapon3 = new EquipmentElement(Runtime.Equipment.Polearm.GetRandomElement());
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipEmpireGears();
+         IWeaponUser p = null;
 
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
+         int i = LogRaamRandom.GenerateRandomNumber(30);
+
+         if (i <= 10) p = new HeavyTwoHanded(participant);
+
+         else if (i <= 20) p = new HeavyOneHanded(participant);
+
+         else if (i <= 30) p = new HeavyPolearm(participant);
+
+
+         p.AddMount();
+
+         return p.Equipment;
       }
 
-      private (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) EquipEmpireGears()
-      {
-         var bodyArmor = new EquipmentElement(Runtime.Equipment.EmpireBodyArmors.GetRandomElement());
-         var headArmor = new EquipmentElement(Runtime.Equipment.EmpireHeadArmors.GetRandomElement());
-         var shoes = new EquipmentElement(Runtime.Equipment.Boots.GetRandomElement());
-
-         return (bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipEmpireMounted(TournamentParticipant tournamentParticipant)
-      {
-         EquipmentElement weapon0;
-         EquipmentElement? weapon3 = null;
-
-         if (LogRaamRandom.EvalPercentage(50))
-         {
-            weapon0 = new EquipmentElement(Runtime.Equipment.Polearm.Where(n => n.StringId.Contains("spear")).ToList().GetRandomElement());
-         }
-         else if (LogRaamRandom.EvalPercentage(50))
-         {
-            weapon0 = new EquipmentElement(Runtime.Equipment.OneHanded.Where(n => n.StringId.Contains("sword")).ToList().GetRandomElement());
-         }
-         else
-         {
-            weapon0 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-            weapon3 = new EquipmentElement(Runtime.Equipment.Polearm.Find(n => n.StringId == "bo_staff"));
-         }
-
-         var weapon1 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipEmpireGears();
-         Equipment result = AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-         BuildMount(ref result, tournamentParticipant);
-
-         return result;
-      }
-
-      private Equipment EquipEmpireOneHander()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.OneHanded.Where(n => n.StringId.Contains("sword")).ToList().GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipEmpireGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipEmpirePolearm()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.Polearm.First(n => n.StringId.Contains("spear")));
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipEmpireGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipEmpireThrower()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-         EquipmentElement weapon1 = weapon0;
-         EquipmentElement weapon2 = weapon0;
-         var weapon3 = new EquipmentElement(Runtime.Equipment.Polearm.Find(n => n.StringId == "bo_staff"));
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipEmpireGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipEmpireTwoHander()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.TwoHanded.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipEmpireGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
 
       private Equipment EquipKhuzait(TournamentParticipant participant)
       {
-         if (participant.Character.IsArcher) return EquipKhuzaitArcher();
-         if (participant.Character.IsMounted) return EquipKhuzaitMounted(participant);
+         if (participant.Character.Occupation == Occupation.Lord) return EquipKhuzaitLord(participant);
 
-         int i = LogRaamRandom.GenerateRandomNumber(100);
+         IWeaponUser p = null;
+         if (participant.Character.IsArcher)
+            p = LogRaamRandom.EvalPercentage(75)
+               ? new HeavyArcher(participant)
+               : new LightArcher(participant);
 
-         if (i <= 65) return EquipKhuzaitPolearm();
+         int i = LogRaamRandom.GenerateRandomNumber(40);
 
-         return EquipKhuzaitThrower();
+         if (i <= 10)
+            p = LogRaamRandom.EvalPercentage(25)
+               ? new HeavyTwoHanded(participant)
+               : new LightTwoHanded(participant);
+
+         else if (i <= 20)
+            p = LogRaamRandom.EvalPercentage(25)
+               ? new HeavyOneHanded(participant)
+               : new LightOneHanded(participant);
+
+         else if (i <= 30)
+            p = LogRaamRandom.EvalPercentage(50)
+               ? new HeavyThrower(participant)
+               : new LightThrower(participant);
+
+         else if (i <= 40)
+            p = LogRaamRandom.EvalPercentage(50)
+               ? new HeavyPolearm(participant)
+               : new LightPolearm(participant);
+
+
+         if (participant.Character.IsMounted) p.AddMount();
+
+         return p.Equipment;
       }
 
-      private Equipment EquipKhuzaitArcher()
+      private Equipment EquipKhuzaitLord(TournamentParticipant participant)
       {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.Bow.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Arrows.GetRandomElement());
-         EquipmentElement weapon2 = weapon1;
-         var weapon3 = new EquipmentElement(Runtime.Equipment.Polearm.GetRandomElement());
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipKhuzaitGears();
+         IWeaponUser p = null;
 
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
+         int i = LogRaamRandom.GenerateRandomNumber(30);
+
+         if (i <= 10) p = new HeavyTwoHanded(participant);
+
+         else if (i <= 20) p = new HeavyOneHanded(participant);
+
+         else if (i <= 40) p = new HeavyPolearm(participant);
+
+
+         p.AddMount();
+
+         return p.Equipment;
       }
 
-      private (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) EquipKhuzaitGears()
-      {
-         var bodyArmor = new EquipmentElement(Runtime.Equipment.KhuzaitBodyArmors.GetRandomElement());
-         var headArmor = new EquipmentElement(Runtime.Equipment.KhuzaitHeadArmors.GetRandomElement());
-         var shoes = new EquipmentElement(Runtime.Equipment.Boots.GetRandomElement());
-
-         return (bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipKhuzaitMounted(TournamentParticipant participant)
-      {
-         EquipmentElement weapon0;
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-
-         if (LogRaamRandom.EvalPercentage(50))
-         {
-            weapon0 = new EquipmentElement(Runtime.Equipment.Polearm.GetRandomElement());
-         }
-         else
-         {
-            weapon0 = new EquipmentElement(Runtime.Equipment.Bow.GetRandomElement());
-            weapon2 = new EquipmentElement(Runtime.Equipment.Arrows.GetRandomElement());
-            weapon3 = new EquipmentElement(Runtime.Equipment.Arrows.GetRandomElement());
-         }
-
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipKhuzaitGears();
-
-         Equipment result = AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-         BuildMount(ref result, participant);
-
-         return result;
-      }
-
-      private Equipment EquipKhuzaitOneHander()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.OneHanded.Where(n => n.StringId.Contains("sword")).ToList().GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-         EquipmentElement? weapon2 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipKhuzaitGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipKhuzaitPolearm()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.Polearm.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipKhuzaitGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipKhuzaitThrower()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-         EquipmentElement weapon1 = weapon0;
-         EquipmentElement weapon2 = weapon0;
-         var weapon3 = new EquipmentElement(Runtime.Equipment.Polearm.Find(n => n.StringId == "spear"));
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipKhuzaitGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipKhuzaitTwoHander()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.TwoHanded.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipKhuzaitGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
 
       private Equipment EquipPlayer(TournamentParticipant participant)
       {
-         int i = LogRaamRandom.GenerateRandomNumber(60);
+         IWeaponUser p = null;
+         int i = LogRaamRandom.GenerateRandomNumber(100);
 
-         switch (participant.Character.Culture.GetCultureCode())
-         {
-            case CultureCode.Empire:
-            {
-               if (i <= 10) return EquipEmpireArcher();
-               if (i <= 20) return EquipEmpireMounted(participant);
-               if (i <= 30) return EquipEmpireOneHander();
-               if (i <= 40) return EquipEmpireTwoHander();
-               if (i <= 50) return EquipEmpirePolearm();
-               if (i <= 60) return EquipEmpireThrower();
-
-               break;
-            }
+         if (i <= 10) p = new HeavyArcher(participant);
+         else if (i <= 20) p = new HeavyOneHanded(participant);
+         else if (i <= 30) p = new HeavyPolearm(participant);
+         else if (i <= 40) p = new HeavyThrower(participant);
+         else if (i <= 50) p = new HeavyTwoHanded(participant);
+         else if (i <= 60) p = new LightArcher(participant);
+         else if (i <= 70) p = new LightOneHanded(participant);
+         else if (i <= 80) p = new LightPolearm(participant);
+         else if (i <= 90) p = new LightThrower(participant);
+         else if (i <= 100) p = new LightTwoHanded(participant);
 
 
-            case CultureCode.Sturgia:
-            {
-               if (i <= 10) return EquipSturgiaArcher();
-               if (i <= 20) return EquipSturgiaMounted(participant);
-               if (i <= 30) return EquipSturgiaOneHander();
-               if (i <= 40) return EquipSturgiaTwoHander();
-               if (i <= 50) return EquipSturgiaPolearm();
-               if (i <= 60) return EquipSturgiaThrower();
+         if (LogRaamRandom.EvalPercentage(50)) p.AddMount();
 
-               break;
-            }
-            case CultureCode.Aserai:
-            {
-               if (i <= 10) return EquipAseraiArcher();
-               if (i <= 20) return EquipAseraiMounted(participant);
-               if (i <= 30) return EquipAseraiOneHander();
-               if (i <= 40) return EquipAseraiTwoHander();
-               if (i <= 50) return EquipAseraiPolearm();
-               if (i <= 60) return EquipAseraiThrower();
-
-               break;
-            }
-            case CultureCode.Vlandia:
-            {
-               if (i <= 10) return EquipVlandiaArcher();
-               if (i <= 20) return EquipVlandiaMounted(participant);
-               if (i <= 30) return EquipVlandiaOneHander();
-               if (i <= 40) return EquipVlandiaTwoHander();
-               if (i <= 50) return EquipVlandiaPolearm();
-               if (i <= 60) return EquipVlandiaThrower();
-
-               break;
-            }
-            case CultureCode.Khuzait:
-            {
-               if (i <= 10) return EquipKhuzaitArcher();
-               if (i <= 20) return EquipKhuzaitMounted(participant);
-               if (i <= 30) return EquipKhuzaitOneHander();
-               if (i <= 40) return EquipKhuzaitTwoHander();
-               if (i <= 50) return EquipKhuzaitPolearm();
-               if (i <= 60) return EquipKhuzaitThrower();
-
-               break;
-            }
-            case CultureCode.Battania:
-            {
-               if (i <= 10) return EquipBattanianArcher();
-               if (i <= 20) return EquipBattanianMounted(participant);
-               if (i <= 30) return EquipBattanianOneHander();
-               if (i <= 40) return EquipBattanianTwoHander();
-               if (i <= 50) return EquipBattanianPolearm();
-               if (i <= 60) return EquipBattanianThrower();
-
-               break;
-            }
-         }
-
-         if (i <= 10) return EquipEmpireArcher();
-         if (i <= 20) return EquipEmpireMounted(participant);
-         if (i <= 30) return EquipEmpireOneHander();
-         if (i <= 40) return EquipEmpireTwoHander();
-         if (i <= 50) return EquipVlandiaPolearm();
-
-         return EquipEmpireThrower();
+         return p.Equipment;
       }
 
       private Equipment EquipSturgia(TournamentParticipant participant)
       {
-         if (participant.Character.IsArcher) return EquipSturgiaArcher();
-         if (participant.Character.IsMounted) return EquipSturgiaMounted(participant);
+         if (participant.Character.Occupation == Occupation.Lord) return EquipSturgiaLord(participant);
 
-         int i = LogRaamRandom.GenerateRandomNumber(100);
+         IWeaponUser p = null;
+         if (participant.Character.IsArcher)
+            p = LogRaamRandom.EvalPercentage(25)
+               ? new HeavyArcher(participant)
+               : new LightArcher(participant);
 
-         if (i <= 25) return EquipSturgiaTwoHander();
-         if (i <= 50) return EquipSturgiaOneHander();
-         if (i <= 75) return EquipSturgiaPolearm();
+         int i = LogRaamRandom.GenerateRandomNumber(40);
 
-         return EquipSturgiaThrower();
+         if (i <= 10)
+            p = LogRaamRandom.EvalPercentage(50)
+               ? new HeavyTwoHanded(participant)
+               : new LightTwoHanded(participant);
+
+         else if (i <= 20)
+            p = LogRaamRandom.EvalPercentage(50)
+               ? new HeavyOneHanded(participant)
+               : new LightOneHanded(participant);
+
+         else if (i <= 30)
+            p = LogRaamRandom.EvalPercentage(75)
+               ? new HeavyThrower(participant)
+               : new LightThrower(participant);
+
+         else if (i <= 40)
+            p = LogRaamRandom.EvalPercentage(25)
+               ? new HeavyPolearm(participant)
+               : new LightPolearm(participant);
+
+
+         if (participant.Character.IsMounted) p.AddMount();
+
+         return p.Equipment;
       }
 
-      private Equipment EquipSturgiaArcher()
+      private Equipment EquipSturgiaLord(TournamentParticipant participant)
       {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.Bow.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Arrows.Find(n => n.StringId == "tournament_arrows"));
-         EquipmentElement weapon2 = weapon1;
-         var weapon3 = new EquipmentElement(Runtime.Equipment.OneHanded.GetRandomElement());
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipSturgiaGears();
+         IWeaponUser p = null;
 
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
+         int i = LogRaamRandom.GenerateRandomNumber(30);
 
-      private (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) EquipSturgiaGears()
-      {
-         var bodyArmor = new EquipmentElement(Runtime.Equipment.SturgiaBodyArmors.GetRandomElement());
-         var headArmor = new EquipmentElement(Runtime.Equipment.SturgiaHeadArmors.GetRandomElement());
-         var shoes = new EquipmentElement(Runtime.Equipment.Boots.GetRandomElement());
+         if (i <= 10) p = new HeavyTwoHanded(participant);
 
-         return (bodyArmor, headArmor, shoes);
-      }
+         else if (i <= 20) p = new HeavyOneHanded(participant);
 
-      private Equipment EquipSturgiaMounted(TournamentParticipant participant)
-      {
-         EquipmentElement weapon0;
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
+         else if (i <= 30) p = new HeavyPolearm(participant);
 
-         weapon0 = LogRaamRandom.EvalPercentage(50)
-            ? new EquipmentElement(Runtime.Equipment.Polearm.GetRandomElement())
-            : new EquipmentElement(Runtime.Equipment.OneHanded.GetRandomElement());
 
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
+         p.AddMount();
 
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipSturgiaGears();
-
-         Equipment result = AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-         BuildMount(ref result, participant);
-
-         return result;
-      }
-
-      private Equipment EquipSturgiaOneHander()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.OneHanded.Where(n => n.StringId.Contains("sword")).ToList().GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-         EquipmentElement? weapon2 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipSturgiaGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipSturgiaPolearm()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.Polearm.Where(n => n.StringId.Contains("spear")).ToList().GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipSturgiaGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipSturgiaThrower()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-         EquipmentElement weapon1 = weapon0;
-         EquipmentElement weapon2 = weapon0;
-         var weapon3 = new EquipmentElement(Runtime.Equipment.Polearm.Find(n => n.StringId == "bo_staff"));
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipSturgiaGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipSturgiaTwoHander()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.TwoHanded.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipSturgiaGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipUnknown(TournamentParticipant participant)
-      {
-         if (participant.Character.IsArcher) return EquipUnknownArcher();
-         if (participant.Character.IsMounted) return EquipUnknownMounted(participant);
-
-         int i = LogRaamRandom.GenerateRandomNumber(100);
-
-         if (i <= 25) return EquipUnknownTwoHander();
-         if (i <= 50) return EquipUnknownOneHander();
-         if (i <= 75) return EquipUnknownPolearm();
-
-         return EquipUnknownThrower();
-      }
-
-      private Equipment EquipUnknownArcher()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.Bow.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Arrows.GetRandomElement());
-         EquipmentElement weapon2 = weapon1;
-         var weapon3 = new EquipmentElement(Runtime.Equipment.Polearm.GetRandomElement());
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipUnknownGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) EquipUnknownGears()
-      {
-         var bodyArmor = new EquipmentElement(Runtime.Equipment.EmpireBodyArmors.GetRandomElement());
-         var headArmor = new EquipmentElement(Runtime.Equipment.VlandiaHeadArmors.GetRandomElement());
-         var shoes = new EquipmentElement(Runtime.Equipment.Boots.GetRandomElement());
-
-         return (bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipUnknownMounted(TournamentParticipant participant)
-      {
-         EquipmentElement weapon0;
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-
-         if (LogRaamRandom.EvalPercentage(50))
-         {
-            weapon0 = new EquipmentElement(Runtime.Equipment.Polearm.GetRandomElement());
-         }
-         else
-         {
-            weapon0 = new EquipmentElement(Runtime.Equipment.Bow.GetRandomElement());
-            weapon2 = new EquipmentElement(Runtime.Equipment.Arrows.GetRandomElement());
-            weapon3 = new EquipmentElement(Runtime.Equipment.Arrows.GetRandomElement());
-         }
-
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipUnknownGears();
-
-         Equipment result = AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-         BuildMount(ref result, participant);
-
-         return result;
-      }
-
-      private Equipment EquipUnknownOneHander()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.OneHanded.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipUnknownGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipUnknownPolearm()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.Polearm.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipUnknownGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipUnknownThrower()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-         EquipmentElement weapon1 = weapon0;
-         EquipmentElement weapon2 = weapon0;
-         var weapon3 = new EquipmentElement(Runtime.Equipment.Polearm.GetRandomElement());
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipUnknownGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipUnknownTwoHander()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.TwoHanded.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipUnknownGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
+         return p.Equipment;
       }
 
       private Equipment EquipVlandia(TournamentParticipant participant)
       {
-         if (participant.Character.IsArcher) return EquipVlandiaArcher();
-         if (participant.Character.IsMounted) return EquipVlandiaMounted(participant);
+         if (participant.Character.Occupation == Occupation.Lord) return EquipVlandiaLord(participant);
 
-         int i = LogRaamRandom.GenerateRandomNumber(100);
+         IWeaponUser p = null;
+         if (participant.Character.IsArcher)
+            p = LogRaamRandom.EvalPercentage(50)
+               ? new HeavyArcher(participant)
+               : new LightArcher(participant);
 
-         if (i <= 25) return EquipVlandiaTwoHander();
-         if (i <= 50) return EquipVlandiaOneHander();
+         int i = LogRaamRandom.GenerateRandomNumber(40);
 
-         return EquipVlandiaPolearm();
+         if (i <= 10)
+            p = LogRaamRandom.EvalPercentage(25)
+               ? new HeavyTwoHanded(participant)
+               : new LightTwoHanded(participant);
+
+         else if (i <= 20)
+            p = LogRaamRandom.EvalPercentage(50)
+               ? new HeavyOneHanded(participant)
+               : new LightOneHanded(participant);
+
+         else if (i <= 30)
+            p = LogRaamRandom.EvalPercentage(25)
+               ? new HeavyThrower(participant)
+               : new LightThrower(participant);
+
+         else if (i <= 40)
+            p = LogRaamRandom.EvalPercentage(75)
+               ? new HeavyPolearm(participant)
+               : new LightPolearm(participant);
+
+
+         if (participant.Character.IsMounted) p.AddMount();
+
+         return p.Equipment;
       }
 
-      private Equipment EquipVlandiaArcher()
+      private Equipment EquipVlandiaLord(TournamentParticipant participant)
       {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.Bow.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Arrows.Find(n => n.StringId == "tournament_arrows"));
-         EquipmentElement weapon2 = weapon1;
-         var weapon3 = new EquipmentElement(Runtime.Equipment.Polearm.GetRandomElement());
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipVlandiaGears();
+         IWeaponUser p = null;
 
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
+         int i = LogRaamRandom.GenerateRandomNumber(40);
 
-      private (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) EquipVlandiaGears()
-      {
-         var bodyArmor = new EquipmentElement(Runtime.Equipment.VlandiaBodyArmors.GetRandomElement());
-         var headArmor = new EquipmentElement(Runtime.Equipment.VlandiaHeadArmors.GetRandomElement());
-         var shoes = new EquipmentElement(Runtime.Equipment.Boots.GetRandomElement());
+         if (i <= 10) p = new HeavyTwoHanded(participant);
 
-         return (bodyArmor, headArmor, shoes);
-      }
+         else if (i <= 20) p = new HeavyOneHanded(participant);
 
-      private Equipment EquipVlandiaMounted(TournamentParticipant participant)
-      {
-         EquipmentElement weapon0;
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-
-         if (LogRaamRandom.EvalPercentage(50))
-            weapon0 = new EquipmentElement(Runtime.Equipment.Polearm.Where(n => n.StringId.Contains("spear")).ToList().GetRandomElement());
-         else if (LogRaamRandom.EvalPercentage(50))
-            weapon0 = new EquipmentElement(Runtime.Equipment.OneHanded.Where(n => n.StringId.Contains("sword")).ToList().GetRandomElement());
-         else
-            weapon0 = new EquipmentElement(Runtime.Equipment.Polearm.GetRandomElement());
+         else if (i <= 40) p = new HeavyPolearm(participant);
 
 
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
+         p.AddMount();
 
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipVlandiaGears();
-         Equipment result = AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-         BuildMount(ref result, participant);
-
-         return result;
-      }
-
-      private Equipment EquipVlandiaOneHander()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.OneHanded.Where(n => n.StringId.Contains("sword")).ToList().GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipVlandiaGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipVlandiaPolearm()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.Polearm.Where(n => n.StringId.Contains("spear") || n.StringId.Contains("lance")).ToList().GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipVlandiaGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipVlandiaThrower()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.ThrownWeapon.GetRandomElement());
-         EquipmentElement weapon1 = weapon0;
-         var weapon2 = new EquipmentElement(Runtime.Equipment.Polearm.GetRandomElement());
-         var weapon3 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipVlandiaGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
-      }
-
-      private Equipment EquipVlandiaTwoHander()
-      {
-         var weapon0 = new EquipmentElement(Runtime.Equipment.TwoHanded.GetRandomElement());
-         var weapon1 = new EquipmentElement(Runtime.Equipment.Shield.GetRandomElement());
-         EquipmentElement? weapon2 = null;
-         EquipmentElement? weapon3 = null;
-         (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) = EquipVlandiaGears();
-
-         return AssignEquipment(weapon0, weapon1, weapon2, weapon3, bodyArmor, headArmor, shoes);
+         return p.Equipment;
       }
 
       #endregion

@@ -21,9 +21,12 @@ namespace LogRaamJousting
       {
          if (GameNetwork.IsClientOrReplay) return false;
 
+         Runtime.HostCulture = ____culture.GetCultureCode();
+         Runtime.IsCulturalEvent = LogRaamRandom.EvalPercentage(10);
+
          foreach (TournamentTeam tournamentTeam in ____match.Teams)
             foreach (TournamentParticipant participant in tournamentTeam.Participants)
-               Runtime.Participant.EquipParticipant(____culture, participant);
+               Runtime.Participant.EquipParticipant(participant);
 
          return false;
       }

@@ -14,20 +14,25 @@ using TaleWorlds.MountAndBlade;
 
 namespace LogRaamJousting
 {
-   public class JoustEquipment
+   public class EquipmentStock
    {
       public List<ItemObject> Arrows;
+
       public List<ItemObject> AseraiBodyArmors;
       public List<ItemObject> AseraiHeadArmors;
       public List<ItemObject> AseraiMounts;
+
       public List<ItemObject> BattaniaBodyArmors;
       public List<ItemObject> BattaniaHeadArmors;
       public List<ItemObject> BattaniaMounts;
       public List<ItemObject> Boots;
       public List<ItemObject> Bow;
+
+
       public List<ItemObject> EmpireBodyArmors;
       public List<ItemObject> EmpireHeadArmors;
       public List<ItemObject> EmpireMounts;
+
       public List<ItemObject> KhuzaitBodyArmors;
       public List<ItemObject> KhuzaitHeadArmors;
       public List<ItemObject> KhuzaitMounts;
@@ -35,18 +40,20 @@ namespace LogRaamJousting
       public List<ItemObject> Polearm;
       public List<ItemObject> Saddles;
       public List<ItemObject> Shield;
+
+
       public List<ItemObject> SturgiaBodyArmors;
       public List<ItemObject> SturgiaHeadArmors;
       public List<ItemObject> SturgiaMounts;
       public List<ItemObject> ThrownWeapon;
       public List<ItemObject> TwoHanded;
+
       public List<ItemObject> VlandiaBodyArmors;
       public List<ItemObject> VlandiaHeadArmors;
       public List<ItemObject> VlandiaMounts;
 
 
-      //TODO: Verify if 2H had axes
-      public JoustEquipment()
+      public EquipmentStock()
       {
          PrepareBodyArmors();
          PrepareHeadArmors();
@@ -67,8 +74,8 @@ namespace LogRaamJousting
          List<ItemObject> t = ItemObject
             .All
             .Where(n => n.ItemType == ItemObject.ItemTypeEnum.BodyArmor)
-            .Where(n => n.Effectiveness <= 20.0f)
-            .Where(n => n.Appearance <= 20)
+            .Where(n => n.IsCivilian)
+            .Where(n => !n.StringId.Contains("female"))
             .Where(n => !n.StringId.Contains("dress"))
             .ToList();
 
@@ -77,9 +84,11 @@ namespace LogRaamJousting
             .Where(n => n.Culture.GetCultureCode() == CultureCode.Empire)
             .ToList();
 
+
          SturgiaBodyArmors = t
             .Where(n => n.Culture.GetCultureCode() == CultureCode.Sturgia)
             .ToList();
+
 
          AseraiBodyArmors = t
             .Where(n => n.Culture.GetCultureCode() == CultureCode.Aserai)
@@ -160,9 +169,12 @@ namespace LogRaamJousting
 
          Boots = ItemObject
             .All
-            .Where(n => n.StringId == "strapped_shoes" ||
-                        n.StringId == "wrapped_shoes")
+            .Where(n => n.ItemType == ItemObject.ItemTypeEnum.LegArmor)
+            .Where(n => n.IsCivilian)
+            .Where(n => !n.StringId.Contains("female"))
+            .Where(n => !n.StringId.Contains("woman"))
             .ToList();
+
 
          Saddles = ItemObject
             .All
@@ -177,9 +189,11 @@ namespace LogRaamJousting
          List<ItemObject> t = ItemObject
             .All
             .Where(n => n.ItemType == ItemObject.ItemTypeEnum.HeadArmor)
-            .Where(n => n.Effectiveness <= 20.0f)
-            .Where(n => n.Appearance <= 20)
+            .Where(n => n.IsCivilian)
+            .Where(n => !n.StringId.Contains("female"))
+            .Where(n => !n.StringId.Contains("woman"))
             .ToList();
+
 
          EmpireHeadArmors = t
             .Where(n => n.Culture.GetCultureCode() != CultureCode.Sturgia &&
@@ -188,6 +202,7 @@ namespace LogRaamJousting
                         n.Culture.GetCultureCode() != CultureCode.Khuzait &&
                         n.Culture.GetCultureCode() != CultureCode.Battania)
             .ToList();
+
 
          SturgiaHeadArmors = t
             .Where(n => n.Culture.GetCultureCode() != CultureCode.Empire &&
@@ -233,6 +248,7 @@ namespace LogRaamJousting
                         n.Culture.GetCultureCode() != CultureCode.Empire)
             .ToList();
       }
+
 
       private void PrepareMounts()
       {

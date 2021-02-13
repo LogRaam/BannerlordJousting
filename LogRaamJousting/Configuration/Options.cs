@@ -1,6 +1,6 @@
-﻿// Code written by Gabriel Mailhot, 05/02/2021.
+﻿// Code written by Gabriel Mailhot, 09/02/2021.
 
-namespace LogRaamJousting
+namespace LogRaamJousting.Configuration
 {
    public enum Options
    {
