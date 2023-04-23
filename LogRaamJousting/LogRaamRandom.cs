@@ -16,7 +16,7 @@ namespace LogRaamJousting
 
       public static bool EvalPercentage(float value)
       {
-         int r = GenerateRandomNumber(100);
+         var r = GenerateRandomNumber(100);
 
          return r < value;
       }
@@ -30,7 +30,7 @@ namespace LogRaamJousting
       {
          InitRandomNumber(Guid.NewGuid().GetHashCode());
 
-         int n = max;
+         var n = max;
          if (n < 0) n = -n;
 
          lock (SyncObj)
@@ -45,8 +45,8 @@ namespace LogRaamJousting
 
       public static int GenerateRandomNumber(int min, int max)
       {
-         int m = min;
-         int n = max;
+         var m = min;
+         var n = max;
 
          if (m < 0 && n >= 0) throw new ApplicationException("Error trying to generate random number; min and max must be either negatives or positives.  This mod doesn't support randomize between negative min and positive max.");
 
@@ -55,7 +55,7 @@ namespace LogRaamJousting
 
          if (m > n)
          {
-            int t = n;
+            var t = n;
             n = m;
             m = t;
          }

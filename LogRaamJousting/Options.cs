@@ -1,4 +1,4 @@
-﻿// Code written by Gabriel Mailhot, 05/02/2021.
+﻿// Code written by Gabriel Mailhot, 02/09/2021.
 
 namespace LogRaamJousting
 {
@@ -8,6 +8,8 @@ namespace LogRaamJousting
       UNDRESSED,
       UNDRESSEDBATTANIA,
       UNDRESSEDEMPIRE,
-      UNDRESSEDMIXED
+      UNDRESSEDMIXED,
+      USEHOSTCULTURE,
+      USEPARTICIPANTCULTURE
    }
 }

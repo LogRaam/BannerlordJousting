@@ -1,9 +1,10 @@
-﻿// Code written by Gabriel Mailhot, 23/01/2021.
+﻿// Code written by Gabriel Mailhot, 09/02/2021.
 
 #region
 
 using System.Reflection;
 using HarmonyLib;
+using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
@@ -23,6 +24,11 @@ namespace LogRaamJousting
          InformationManager.DisplayMessage(new InformationMessage("LogRaam's Jousting is ready", Colors.Yellow));
       }
 
+      protected override void OnGameStart(Game game, IGameStarter gameStarter)
+      {
+         var starter = (CampaignGameStarter) gameStarter;
+         starter.AddBehavior(new JoustingBehavior());
+      }
 
       protected override void OnSubModuleLoad()
       {
