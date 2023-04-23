@@ -1,4 +1,4 @@
-﻿// Code written by Gabriel Mailhot, 09/02/2021.
+﻿// Code written by Gabriel Mailhot, 23/04/2023.
 
 #region
 
@@ -21,7 +21,7 @@ namespace LogRaamJousting
       protected override void OnBeforeInitialModuleScreenSetAsRoot()
       {
          base.OnBeforeInitialModuleScreenSetAsRoot();
-         InformationManager.DisplayMessage(new InformationMessage("LogRaam's Jousting is ready", Colors.Yellow));
+         InformationManager.DisplayMessage(new InformationMessage("Jousting activated!", Colors.Green));
       }
 
       protected override void OnGameStart(Game game, IGameStarter gameStarter)

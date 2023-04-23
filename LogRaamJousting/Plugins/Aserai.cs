@@ -10,6 +10,6 @@ namespace LogRaamJousting.Plugins
 {
    public class Aserai : IPlugin
    {
-      public IOptions Options = new AseraiOptions();
+      public new IOptions Options = new AseraiOptions();
    }
 }

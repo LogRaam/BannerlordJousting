@@ -35,11 +35,34 @@ namespace LogRaamJousting
 
          lock (SyncObj)
          {
-            if (_random == null) _random = new Random();
+            _random ??= new Random();
 
             return max < 0
                ? -_random.Next(n)
                : _random.Next(n);
+         }
+      }
+
+      public static decimal GenerateRandomNumber(decimal max)
+      {
+         InitRandomNumber(Guid.NewGuid().GetHashCode());
+
+         int count = BitConverter.GetBytes(decimal.GetBits(max)[3])[2];
+
+         if (count == 0) return GenerateRandomNumber((int) max);
+
+         var n = (int) (max * count);
+         if (n < 0) n = -n;
+
+         lock (SyncObj)
+         {
+            _random ??= new Random();
+
+            decimal result = max < 0
+               ? -_random.Next(n)
+               : _random.Next(n);
+
+            return result / count;
          }
       }
 
@@ -62,7 +85,7 @@ namespace LogRaamJousting
 
          lock (SyncObj)
          {
-            if (_random == null) _random = new Random();
+            _random ??= new Random();
 
             return max < 0
                ? -_random.Next(m, n)

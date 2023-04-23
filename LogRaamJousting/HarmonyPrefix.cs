@@ -1,4 +1,4 @@
-﻿// Code written by Gabriel Mailhot, 09/02/2021.
+﻿// Code written by Gabriel Mailhot, 23/04/2023.
 
 #region
 
@@ -8,8 +8,6 @@ using SandBox.Tournaments.MissionLogics;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.TournamentGames;
 using TaleWorlds.MountAndBlade;
-
-//using TaleWorlds.CampaignSystem.SandBox.Source.TournamentGames;
 
 #endregion
 
@@ -24,6 +22,9 @@ namespace LogRaamJousting
       {
          if (GameNetwork.IsClientOrReplay) return false;
          if (!new Config(new ConfigLoader()).HaveToApplyModFor(____culture.GetCultureCode())) return false;
+
+         Runtime.HostCulture = ____culture.GetCultureCode();
+         Runtime.IsCulturalEvent = LogRaamRandom.EvalPercentage(10);
 
          foreach (TournamentTeam tournamentTeam in ____match.Teams)
             foreach (TournamentParticipant participant in tournamentTeam.Participants)
