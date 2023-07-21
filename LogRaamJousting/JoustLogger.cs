@@ -15,6 +15,12 @@ namespace LogRaamJousting
    {
       public DirectoryInfo LogPath;
 
+
+      public JoustLogger(DirectoryInfo logPath)
+      {
+         LogPath = logPath;
+      }
+
       public void LogEquipmentToFile(ItemObject a, ItemObject b, ItemObject c)
       {
          File.AppendAllText(LogPath.FullName, "--- EQUIPMENT ---" + Environment.NewLine);
@@ -31,7 +37,7 @@ namespace LogRaamJousting
          File.AppendAllText(LogPath.FullName, "Participant culture = " + participant.Character.Culture.GetCultureCode() + Environment.NewLine);
       }
 
-      internal void LogToFile(string message)
+      public void LogToFile(string message)
       {
          File.AppendAllText(LogPath.FullName, message + Environment.NewLine);
       }

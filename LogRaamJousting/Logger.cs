@@ -10,7 +10,7 @@ using TaleWorlds.Localization;
 
 namespace LogRaamJousting
 {
-   internal class Logger
+   public class Logger
    {
       public void ShowMessage(string msg, Color? color = null)
       {
@@ -24,28 +24,5 @@ namespace LogRaamJousting
       {
          MBInformationManager.AddQuickInformation(message, 0, charObj, soundEventPath);
       }
-
-      /*
-      public static void LogDebugMessage(string msg)
-      {
-         if (TXPSettings.Instance.DebugMode)
-         {
-            LoggerExtensions.LogDebugAndDisplay(SubModule.Log, msg, Array.Empty<object>());
-            return;
-         }
-         LoggerExtensions.LogDebug(SubModule.Log, msg, Array.Empty<object>());
-      }
-
-      
-      public static void LogDebugMessage(string msg, Exception ex)
-      {
-         if (TXPSettings.Instance.DebugMode)
-         {
-            LoggerExtensions.LogDebugAndDisplay(SubModule.Log, ex, msg, Array.Empty<object>());
-            return;
-         }
-         LoggerExtensions.LogDebug(SubModule.Log, ex, msg, Array.Empty<object>());
-      }
-      */
    }
 }

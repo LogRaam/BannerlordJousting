@@ -2,12 +2,14 @@
 
 #region
 
+using System.Collections.Generic;
+using System.Linq;
 using HarmonyLib;
-using LogRaamJousting.Configuration;
+using LogRaamJousting.Decoupling;
+using LogRaamJousting.Factory;
 using SandBox.Tournaments.MissionLogics;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.TournamentGames;
-using TaleWorlds.MountAndBlade;
 
 #endregion
 
@@ -20,16 +22,25 @@ namespace LogRaamJousting
 
       private static bool Prefix(TournamentFightMissionController __instance, TournamentMatch ____match, CultureObject ____culture)
       {
-         if (GameNetwork.IsClientOrReplay) return false;
-         if (!new Config(new ConfigLoader()).HaveToApplyModFor(____culture.GetCultureCode())) return false;
+         //if (new Config(new ConfigLoader()).ParticipantsUsesTheirOwnEquipments(culture.GetCultureCode().ToString())) return false;
 
-         Runtime.HostCulture = ____culture.GetCultureCode();
-         Runtime.IsCulturalEvent = LogRaamRandom.EvalPercentage(10);
+         var matchParticipants = new List<Participant>();
 
-         foreach (TournamentTeam tournamentTeam in ____match.Teams)
-            foreach (TournamentParticipant participant in tournamentTeam.Participants)
-               Runtime.Participant.EquipParticipant(____culture.GetCultureCode(), participant);
+         for (var t = 0; t < ____match.Teams.Count(); t++)
+         {
+            for (var i = 0; i < ____match.Teams.ToList()[t].Participants.Count(); i++)
+            {
+               var participant = ____match.Teams.ToList()[t].Participants.ToList()[i];
+               matchParticipants.Add(new Participant(ref participant));
+            }
+         }
 
+         new JoustMatch(new GameNetwork(),
+            ____culture.GetCultureCode().ToString(),
+            LogRaamRandom.EvalPercentage(10),
+            ref matchParticipants,
+            new DefaultSetup(),
+            new DefaultKits()).Start();
 
          return false;
       }

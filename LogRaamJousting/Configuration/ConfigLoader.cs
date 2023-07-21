@@ -10,13 +10,25 @@ namespace LogRaamJousting.Configuration
 {
    public class ConfigLoader : IConfigLoader
    {
+      public bool IsLineExistInStruct(string[] options, string lineToFind)
+      {
+         foreach (var option in options)
+         {
+            if (!option.Contains(lineToFind)) continue;
+
+            return true;
+         }
+
+         return false;
+      }
+
       public string[] RetrieveConfigDetails()
       {
-         DirectoryInfo directoryInfo = Directory.GetParent(Directory.GetCurrentDirectory()).Parent;
+         var directoryInfo = Directory.GetParent(Directory.GetCurrentDirectory()).Parent;
 
          if (directoryInfo == null) return new[] {""};
 
-         string str = directoryInfo.FullName + "\\Modules\\LogRaamJousting\\JOUSTING_OPTIONS.txt";
+         var str = directoryInfo.FullName + "\\Modules\\LogRaamJousting\\JOUSTING_OPTIONS.txt";
 
          return File.ReadAllLines(str);
       }

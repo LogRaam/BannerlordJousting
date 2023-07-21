@@ -1,94 +1,89 @@
-﻿// Code written by Gabriel Mailhot, 02/03/2023.
-
-#region
-
-#endregion
-
+﻿// Code written by Gabriel Mailhot, 23/04/2023.
 
 #region
 
 using LogRaamJousting.Options;
-using TaleWorlds.Core;
 
 #endregion
 
 namespace LogRaamJousting.Configuration
 {
-   public class Config
+   public class Config : IConfig
    {
       private readonly IConfigLoader _loader;
+      private readonly IOptions _options;
 
-      public Config(IConfigLoader loader)
+      public Config(IOptions cultureOptions, IConfigLoader loader)
       {
+         _options = cultureOptions;
          _loader = loader;
       }
 
-      private string[] _settings => _loader.RetrieveConfigDetails();
-
-
-      public bool HaveToApplyModFor(CultureCode culture)
+      public Config()
       {
-         switch (culture)
-         {
-            case CultureCode.Empire:
-               return new EmpireOptions().ShouldHappens(_settings);
-            case CultureCode.Sturgia:
-               return new SturgiaOptions().ShouldHappens(_settings);
-            case CultureCode.Aserai:
-               return new AseraiOptions().ShouldHappens(_settings);
-            case CultureCode.Vlandia:
-               return new VlandiaOptions().ShouldHappens(_settings);
-            case CultureCode.Khuzait:
-               return new KhuzaitOptions().ShouldHappens(_settings);
-            case CultureCode.Battania:
-               return new BattaniaOptions().ShouldHappens(_settings);
-            default:
-               return true;
-         }
+         _options = new CultureOptions();
+         _loader = new ConfigLoader();
+      }
+
+      public ICultureOption GetSpecificOptionsFor(string culture)
+      {
+         return culture.ToUpper() switch {
+            "EMPIRE" => new EmpireOptions(_options),
+            "STURGIA" => new SturgiaOptions(_options),
+            "ASERAI" => new AseraiOptions(_options),
+            "VLANDIA" => new VlandiaOptions(_options),
+            "KHUZAIT" => new KhuzaitOptions(_options),
+            "BATTANIA" => new BattaniaOptions(_options),
+            "BYZANTINE" => new ByzantineOptions(_options),
+            "AYYUBID" => new AyyubidOptions(_options),
+            var _ => new EmpireOptions(_options)
+         };
+      }
+
+      public bool HostShouldProvideArmors(string hostCulture)
+      {
+         return GetSpecificOptionsFor(hostCulture).ShouldProvideArmors(_loader.RetrieveConfigDetails());
+      }
+
+      public bool HostShouldProvideWeapons(string hostCulture)
+      {
+         return GetSpecificOptionsFor(hostCulture).ShouldProvideWeapons(_loader.RetrieveConfigDetails());
       }
 
 
-      public bool ShouldBeNaked(CultureCode culture)
+      public bool IsHostEnforcingHisCulture(string hostCulture)
       {
-         switch (culture)
-         {
-            case CultureCode.Empire:
-               return new EmpireOptions().ShouldBeNaked(_settings);
-            case CultureCode.Sturgia:
-               return new SturgiaOptions().ShouldBeNaked(_settings);
-            case CultureCode.Aserai:
-               return new AseraiOptions().ShouldBeNaked(_settings);
-            case CultureCode.Vlandia:
-               return new VlandiaOptions().ShouldBeNaked(_settings);
-            case CultureCode.Khuzait:
-               return new KhuzaitOptions().ShouldBeNaked(_settings);
-            case CultureCode.Battania:
-               return new BattaniaOptions().ShouldBeNaked(_settings);
-            default:
-               return true;
-         }
+         return ShouldApplyModForThisMatch(hostCulture) && GetSpecificOptionsFor(hostCulture).ShouldUseHostCulture(_loader.RetrieveConfigDetails());
       }
 
-
-      public bool ShouldUseHostCulture(CultureCode culture)
+      public bool IsPlayerMayShouldGainRenownWhenWinningTournament()
       {
-         switch (culture)
-         {
-            case CultureCode.Empire:
-               return new EmpireOptions().ShouldUseHostCulture(_settings);
-            case CultureCode.Sturgia:
-               return new SturgiaOptions().ShouldUseHostCulture(_settings);
-            case CultureCode.Aserai:
-               return new AseraiOptions().ShouldUseHostCulture(_settings);
-            case CultureCode.Vlandia:
-               return new VlandiaOptions().ShouldUseHostCulture(_settings);
-            case CultureCode.Khuzait:
-               return new KhuzaitOptions().ShouldUseHostCulture(_settings);
-            case CultureCode.Battania:
-               return new BattaniaOptions().ShouldUseHostCulture(_settings);
-            default:
-               return true;
-         }
+         return new ConsequenceOptions(_options, _loader).PlayerShouldGainRenownPoints(_loader.RetrieveConfigDetails());
+      }
+
+      public bool IsPlayerShouldGainExtraRenownWhenNaked()
+      {
+         return new ConsequenceOptions(_options, _loader).PlayerShouldGainExtraRenownPointsWhenNude(_loader.RetrieveConfigDetails());
+      }
+
+      public bool IsPlayerShouldLosesRenownWhenLosingTournament()
+      {
+         return new ConsequenceOptions(_options, _loader).PlayerShouldLosesRenownPoints(_loader.RetrieveConfigDetails());
+      }
+
+      public bool ParticipantsUsesTheirOwnEquipments(string hostCulture)
+      {
+         return GetSpecificOptionsFor(hostCulture).ParticipantShouldUseItsOwnEquipment(_loader.RetrieveConfigDetails());
+      }
+
+      public bool ShouldApplyModForThisMatch(string hostCulture)
+      {
+         return GetSpecificOptionsFor(hostCulture).ShouldHappens(_loader.RetrieveConfigDetails());
+      }
+
+      public bool ShouldBeNaked(string hostCulture)
+      {
+         return ShouldApplyModForThisMatch(hostCulture) && GetSpecificOptionsFor(hostCulture).ShouldBeNaked(_loader.RetrieveConfigDetails());
       }
    }
 }

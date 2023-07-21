@@ -4,6 +4,7 @@ namespace LogRaamJousting.Configuration
 {
    public interface IConfigLoader
    {
+      bool IsLineExistInStruct(string[] options, string lineToFind);
       string[] RetrieveConfigDetails();
    }
 }

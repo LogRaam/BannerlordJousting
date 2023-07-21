@@ -9,13 +9,12 @@ using TaleWorlds.Library;
 
 namespace LogRaamJousting
 {
-   internal class Renown
+   public class Renown
    {
       public void GiveBonusRenown(Hero hero, float renown)
       {
-         Clan clan = Hero.MainHero.Clan;
-         int num = MathF.Round(renown);
-         clan.Renown += renown;
+         Clan clan = hero.Clan;
+         clan.Renown += MathF.Round(renown);
       }
    }
 }

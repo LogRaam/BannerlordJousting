@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Unit Test</Title>
+      <Author>LogRaam</Author>
+      <Description>Add nUnit test method.</Description>
+      <Shortcut>tst</Shortcut>
+    </Header>
+    <Snippet>
+      <Code Language="CSharp">
+        <![CDATA[
+       [Test]
+       public void Given_When_Then()
+       {
+          //Arrange
+          var ExpectedResult = "";
+          var sut = "";
+
+          //Act
+          var actualResult = "";
+
+          //Assert
+          actualResult.Should().Be(ExpectedResult);
+       }
+    ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
