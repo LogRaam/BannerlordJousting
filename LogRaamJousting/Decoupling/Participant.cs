@@ -2,6 +2,7 @@
 
 #region
 
+using System.Linq;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.TournamentGames;
 using TaleWorlds.Core;
@@ -159,7 +160,16 @@ namespace LogRaamJousting.Decoupling
          }
       }
 
-      public TournamentParticipant RefToGameParticipant()
+      public Equipment GetBattleEquipments()
+      {
+         var state = new CampaignState();
+
+         if (state.GameStarted() && state.CampaignStarted()) return RefToGameParticipant().Character.BattleEquipments.First();
+
+         return new Equipment();
+      }
+
+      public TournamentParticipant RefToGameParticipant() //bug: lorsque j'appel un type TournamentParticipant avec nUnit, j'ai un NullRef car le jeu ne roule pas et le ctor ne fonctionne qu'avec le runtime du jeu.  Je dois trouver une façon de ne pas utiliser ce type dans mes tests.
       {
          if (_participant == null) return new TournamentParticipant(new CharacterObject());
 

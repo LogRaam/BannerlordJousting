@@ -11,8 +11,16 @@ namespace LogRaamJousting.Factory
 {
    internal class DefaultSetup : ISetup
    {
-      public IConfigLoader ConfigLoader { get; } = new ConfigLoader();
-      public IConfig Configuration { get; } = new Config();
-      public IOptions CultureOptions { get; } = new CultureOptions();
+      public DefaultSetup()
+      {
+         ConfigLoader = new ConfigLoader();
+         Configuration = new Config();
+         CultureOptions = new CultureOptions(ConfigLoader);
+      }
+
+
+      public IConfigLoader ConfigLoader { get; }
+      public IConfig Configuration { get; }
+      public IOptions CultureOptions { get; }
    }
 }

@@ -11,6 +11,10 @@ namespace LogRaamJoustingTest.Substitutes
 {
    public class ConfigLoaderSubstitute : IConfigLoader, IOptions
    {
+      public bool _shouldBeNaked;
+
+      public bool _shouldUseTheirEquipment;
+
       public string[] Content = {
          "",
          "--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---   ",
@@ -41,7 +45,7 @@ namespace LogRaamJoustingTest.Substitutes
 
       public bool ShouldBeNaked(string lineToFind)
       {
-         throw new NotImplementedException();
+         return _shouldBeNaked;
       }
 
       public bool ShouldHappens(string[] options, string lineToFind)
@@ -76,7 +80,7 @@ namespace LogRaamJoustingTest.Substitutes
 
       public bool ShouldUseTheirEquipment(string[] options, string xAseraiTournamentSParticipantsMustBringTheirOwnEquipment)
       {
-         throw new NotImplementedException();
+         return _shouldUseTheirEquipment;
       }
    }
 }

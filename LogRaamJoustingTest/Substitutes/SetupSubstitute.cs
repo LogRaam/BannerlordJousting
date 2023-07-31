@@ -12,7 +12,21 @@ namespace LogRaamJoustingTest.Substitutes
 {
    internal class SetupSubstitute : ISetup
    {
-      public IConfigLoader ConfigLoader { get; } = new ConfigLoader();
+      public SetupSubstitute()
+      {
+         ConfigLoader = new ConfigLoaderSubstitute();
+         Configuration = new ConfigurationSubstitute();
+         CultureOptions = new CultureOptions(ConfigLoader);
+      }
+
+      public SetupSubstitute(IConfigLoader configLoader, IConfig configuration, IOptions options)
+      {
+         ConfigLoader = configLoader;
+         Configuration = configuration;
+         CultureOptions = options;
+      }
+
+      public IConfigLoader ConfigLoader { get; }
       public IConfig Configuration { get; }
       public IOptions CultureOptions { get; }
    }

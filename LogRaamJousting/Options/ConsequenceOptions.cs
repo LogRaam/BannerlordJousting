@@ -26,7 +26,7 @@ namespace LogRaamJousting.Options
 
       public ConsequenceOptions()
       {
-         _options = new CultureOptions();
+         _options = new CultureOptions(_loader);
          _loader = new ConfigLoader();
       }
 

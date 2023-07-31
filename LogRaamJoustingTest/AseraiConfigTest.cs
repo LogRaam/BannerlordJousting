@@ -4,6 +4,7 @@
 
 using FluentAssertions;
 using LogRaamJousting.Configuration;
+using LogRaamJousting.Options;
 using LogRaamJoustingTest.Substitutes;
 using NUnit.Framework;
 
@@ -75,9 +76,11 @@ Note that you can change the percentage value of each of the above lines.
 
          var settings = file.Split(new[] {Environment.NewLine}, StringSplitOptions.None);
 
-         var sut = new Config(new CultureOptionsSubstitute(), new ConfigLoaderSubstitute {
+         var configLoaderSubstitute = new ConfigLoaderSubstitute {
             Content = settings
-         });
+         };
+
+         var sut = new Config(new CultureOptions(configLoaderSubstitute), configLoaderSubstitute);
          var param1 = "ASERAI";
          var expectedResult = true;
 
@@ -149,9 +152,11 @@ Note that you can change the percentage value of each of the above lines.
 
          var settings = file.Split(new[] {Environment.NewLine}, StringSplitOptions.None);
 
-         var sut = new Config(new CultureOptionsSubstitute(), new ConfigLoaderSubstitute {
+         var configLoaderSubstitute = new ConfigLoaderSubstitute {
             Content = settings
-         });
+         };
+
+         var sut = new Config(new CultureOptions(configLoaderSubstitute), configLoaderSubstitute);
          var param1 = "ASERAI";
          var expectedResult = false;
 
@@ -223,9 +228,11 @@ Note that you can change the percentage value of each of the above lines.
 
          var settings = file.Split(new[] {Environment.NewLine}, StringSplitOptions.None);
 
-         var sut = new Config(new CultureOptionsSubstitute(), new ConfigLoaderSubstitute {
+         var configLoaderSubstitute = new ConfigLoaderSubstitute {
             Content = settings
-         });
+         };
+
+         var sut = new Config(new CultureOptions(configLoaderSubstitute), configLoaderSubstitute);
          var param1 = "ASERAI";
          var expectedResult = true;
 
@@ -297,9 +304,11 @@ Note that you can change the percentage value of each of the above lines.
 
          var settings = file.Split(new[] {Environment.NewLine}, StringSplitOptions.None);
 
-         var sut = new Config(new CultureOptionsSubstitute(), new ConfigLoaderSubstitute {
+         var configLoaderSubstitute = new ConfigLoaderSubstitute {
             Content = settings
-         });
+         };
+
+         var sut = new Config(new CultureOptions(configLoaderSubstitute), configLoaderSubstitute);
          var param1 = "ASERAI";
          var expectedResult = true;
 
@@ -372,9 +381,11 @@ Note that you can change the percentage value of each of the above lines.
 
          var settings = file.Split(new[] {Environment.NewLine}, StringSplitOptions.None);
 
-         var sut = new Config(new CultureOptionsSubstitute(), new ConfigLoaderSubstitute {
+         var configLoaderSubstitute = new ConfigLoaderSubstitute {
             Content = settings
-         });
+         };
+
+         var sut = new Config(new CultureOptions(configLoaderSubstitute), configLoaderSubstitute);
          var param1 = "ASERAI";
          var expectedResult = false;
 
@@ -446,9 +457,11 @@ Note that you can change the percentage value of each of the above lines.
 
          var settings = file.Split(new[] {Environment.NewLine}, StringSplitOptions.None);
 
-         var sut = new Config(new CultureOptionsSubstitute(), new ConfigLoaderSubstitute {
+         var configLoaderSubstitute = new ConfigLoaderSubstitute {
             Content = settings
-         });
+         };
+
+         var sut = new Config(new CultureOptions(configLoaderSubstitute), configLoaderSubstitute);
          var param1 = "ASERAI";
          var expectedResult = false;
 
@@ -520,9 +533,11 @@ Note that you can change the percentage value of each of the above lines.
 
          var settings = file.Split(new[] {Environment.NewLine}, StringSplitOptions.None);
 
-         var sut = new Config(new CultureOptionsSubstitute(), new ConfigLoaderSubstitute {
+         var configLoaderSubstitute = new ConfigLoaderSubstitute {
             Content = settings
-         });
+         };
+
+         var sut = new Config(new CultureOptions(configLoaderSubstitute), configLoaderSubstitute);
          var param1 = "ASERAI";
          var expectedResult = false;
 
@@ -595,9 +610,11 @@ Note that you can change the percentage value of each of the above lines.
 
          var settings = file.Split(new[] {Environment.NewLine}, StringSplitOptions.None);
 
-         var sut = new Config(new CultureOptionsSubstitute(), new ConfigLoaderSubstitute {
+         var configLoaderSubstitute = new ConfigLoaderSubstitute {
             Content = settings
-         });
+         };
+
+         var sut = new Config(new CultureOptions(configLoaderSubstitute), configLoaderSubstitute);
          var param1 = "ASERAI";
          var expectedResult = false;
 
@@ -669,9 +686,11 @@ Note that you can change the percentage value of each of the above lines.
 
          var settings = file.Split(new[] {Environment.NewLine}, StringSplitOptions.None);
 
-         var sut = new Config(new CultureOptionsSubstitute(), new ConfigLoaderSubstitute {
+         var configLoaderSubstitute = new ConfigLoaderSubstitute {
             Content = settings
-         });
+         };
+
+         var sut = new Config(new CultureOptions(configLoaderSubstitute), configLoaderSubstitute);
          var param1 = "ASERAI";
          var expectedResult = false;
 

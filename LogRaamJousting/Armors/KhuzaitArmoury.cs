@@ -11,6 +11,13 @@ namespace LogRaamJousting.Armors
 {
    public class KhuzaitArmoury : BaseArmoury, IArmoury
    {
+      private readonly IBaseArmoury _baseArmoury;
+
+      public KhuzaitArmoury(IBaseArmoury baseArmoury)
+      {
+         _baseArmoury = baseArmoury;
+      }
+
       public (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) RequestArmorForLevel(ArmorTier level)
       {
          //return (new EquipmentElement(), new EquipmentElement(), new EquipmentElement());

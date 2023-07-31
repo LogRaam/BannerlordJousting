@@ -2,12 +2,10 @@
 
 #region
 
-using System.Linq;
 using LogRaamJousting.Armors;
 using LogRaamJousting.Configuration;
 using LogRaamJousting.Decoupling;
 using LogRaamJousting.Factory;
-using LogRaamJousting.Options;
 using LogRaamJousting.Stables;
 using LogRaamJousting.Weapons;
 using TaleWorlds.CampaignSystem.TournamentGames;
@@ -19,23 +17,22 @@ namespace LogRaamJousting.Equipments
 {
    public class EquipmentPlugin
    {
+      private readonly IConfig _config;
+      private readonly string _tournamentCulture;
       private ISetup _get;
 
 
-      public EquipmentPlugin(ISetup setup)
+      public EquipmentPlugin(ISetup setup, IConfig config, string tournamentCulture, Participant participant)
       {
          _get = setup;
+         _config = config;
+         _tournamentCulture = tournamentCulture;
+         Participant = participant;
       }
 
-      public EquipmentPlugin()
-      {
-         _get = new DefaultSetup();
-      }
 
-      public ICultureOption Options { get; set; }
       public Participant Participant { get; set; }
       public TournamentTeam Team { get; set; }
-      public string TournamentCulture { get; set; }
 
 
       public ArmorTier ArmorQualityBonus()
@@ -157,7 +154,7 @@ namespace LogRaamJousting.Equipments
 
       public void PrepareProtectiveGears(EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes, ref Equipment result)
       {
-         if (Options.ShouldBeNaked(TournamentCulture)) return;
+         if (_config.ShouldBeNaked(_tournamentCulture)) return; //bug: ShouldBeNaked should refer to Host.
 
          result.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Body, bodyArmor);
          result.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Head, headArmor);
@@ -174,7 +171,7 @@ namespace LogRaamJousting.Equipments
 
       public (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) RetrieveParticipantArmors()
       {
-         var p = Participant.RefToGameParticipant().Character.BattleEquipments.First();
+         var p = Participant.GetBattleEquipments();
          var body = p.GetEquipmentFromSlot(EquipmentIndex.Body);
          var head = p.GetEquipmentFromSlot(EquipmentIndex.Head);
          var shoes = p.GetEquipmentFromSlot(EquipmentIndex.Leg);
@@ -184,7 +181,7 @@ namespace LogRaamJousting.Equipments
 
       public (EquipmentElement weapon0, EquipmentElement weapon1, EquipmentElement weapon2, EquipmentElement weapon3) RetrieveParticipantWeapons()
       {
-         var p = Participant.RefToGameParticipant().Character.BattleEquipments.First();
+         var p = Participant.GetBattleEquipments();
          var w0 = p.GetEquipmentFromSlot(EquipmentIndex.Weapon0);
          var w1 = p.GetEquipmentFromSlot(EquipmentIndex.Weapon1);
          var w2 = p.GetEquipmentFromSlot(EquipmentIndex.Weapon2);
@@ -205,10 +202,10 @@ namespace LogRaamJousting.Equipments
 
          foreach (var weapon in weapons)
          {
-            if (weapon0.Item.StringId == weapon) return true;
-            if (weapon1.HasValue && weapon1.Value.Item.StringId == weapon) return true;
-            if (weapon2.HasValue && weapon2.Value.Item.StringId == weapon) return true;
-            if (weapon3.HasValue && weapon3.Value.Item.StringId == weapon) return true;
+            if (weapon0.Item?.StringId == weapon) return true;
+            if (weapon1.HasValue && weapon1.Value.Item?.StringId == weapon) return true;
+            if (weapon2.HasValue && weapon2.Value.Item?.StringId == weapon) return true;
+            if (weapon3.HasValue && weapon3.Value.Item?.StringId == weapon) return true;
          }
 
          return false;
@@ -228,11 +225,11 @@ namespace LogRaamJousting.Equipments
          if (weapon2 != null) result.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Weapon2, (EquipmentElement) weapon2);
          if (weapon3 != null) result.AddEquipmentToSlotWithoutAgent(EquipmentIndex.Weapon3, (EquipmentElement) weapon3);
 
-         var c = Options.ShouldUseHostCulture(TournamentCulture)
-            ? TournamentCulture
+         var c = _config.IsHostEnforcingHisCulture(_tournamentCulture)
+            ? _tournamentCulture
             : Participant.Culture;
 
-         if (!Options.ShouldBeNaked(c)) AssignGears(bodyArmor, headArmor, shoes, ref result);
+         if (!_config.ShouldBeNaked(c)) AssignGears(bodyArmor, headArmor, shoes, ref result);
 
          return result;
       }

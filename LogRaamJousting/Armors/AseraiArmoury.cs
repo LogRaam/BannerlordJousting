@@ -9,11 +9,24 @@ using TaleWorlds.Core;
 
 namespace LogRaamJousting.Armors
 {
-   public class AseraiArmoury : BaseArmoury, IArmoury
+   public class AseraiArmoury : IArmoury
    {
+      private readonly IBaseArmoury _base;
+      /*
+    public AseraiArmoury()
+    {
+       _base = new BaseArmoury();
+    }
+      */
+
+      public AseraiArmoury(IBaseArmoury baseArmoury)
+      {
+         _base = baseArmoury;
+      }
+
       public (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) RequestArmorForLevel(ArmorTier level)
       {
-         return base.RequestArmorForLevel("Aserai", level);
+         return _base.RequestArmorForLevel("Aserai", level);
       }
    }
 }

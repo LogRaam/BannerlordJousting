@@ -12,7 +12,7 @@ using ItemObject = TaleWorlds.Core.ItemObject;
 
 namespace LogRaamJousting.Armors
 {
-   public class BaseArmoury
+   public class BaseArmoury : IBaseArmoury
    {
       private readonly Items _bodyArmor;
       private readonly Items _headArmor;
@@ -25,6 +25,7 @@ namespace LogRaamJousting.Armors
          _legArmor = new Items();
       }
 
+
       public BaseArmoury(Items bodyArmor, Items headArmor, Items legArmor)
       {
          _bodyArmor = bodyArmor;
@@ -34,11 +35,11 @@ namespace LogRaamJousting.Armors
 
       public (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) RequestArmorForLevel(string culture, ArmorTier occupation)
       {
-         EquipmentElement bodyArmor = GetBodyArmorFor(culture, occupation);
+         var bodyArmor = GetBodyArmorFor(culture, occupation);
 
-         EquipmentElement headArmor = GetHeadArmorFor(culture, occupation);
+         var headArmor = GetHeadArmorFor(culture, occupation);
 
-         EquipmentElement legArmor = GetLegArmorFor(culture, occupation);
+         var legArmor = GetLegArmorFor(culture, occupation);
 
          return (bodyArmor, headArmor, legArmor);
       }
@@ -47,10 +48,10 @@ namespace LogRaamJousting.Armors
       {
          var result = new List<ItemObject>();
 
-         foreach (Decoupling.ItemObject item in items)
+         foreach (var item in items)
          {
             if (item.Culture == null) continue;
-            string t = item.Culture.Name.ToString().ToUpper();
+            var t = item.Culture.Name.ToString().ToUpper();
             if (t == culture.ToUpper()) result.Add(item.ToEquipmentElement());
          }
 
@@ -85,7 +86,7 @@ namespace LogRaamJousting.Armors
       private EquipmentElement GetBodyArmorFor(string culture, ArmorTier occupation)
       {
          var bodyItems = new Items();
-         foreach (Decoupling.ItemObject item in new Items().All)
+         foreach (var item in _bodyArmor.All)
          {
             if (item.ItemType != ItemObject.ItemTypeEnum.BodyArmor) continue;
             if (item.StringId.Contains("dress")) continue;
@@ -94,13 +95,21 @@ namespace LogRaamJousting.Armors
             bodyItems.AddItemToSelectedList(item);
          }
 
-         return new EquipmentElement(FilterByCulture(culture, bodyItems.SelectedItems).GetRandomElement());
+         List<ItemObject> items = FilterByCulture(culture, bodyItems.SelectedItems);
+
+         if (items.Count == 0) return new EquipmentElement();
+         var selectedItem = items.Count > 1
+            ? items[LogRaamRandom.GenerateRandomNumber(items.Count)]
+            : items[0];
+
+
+         return new EquipmentElement(selectedItem);
       }
 
       private EquipmentElement GetHeadArmorFor(string culture, ArmorTier occupation)
       {
          var headItems = new Items();
-         foreach (Decoupling.ItemObject item in new Items().All)
+         foreach (var item in _headArmor.All)
          {
             if (item.ItemType != ItemObject.ItemTypeEnum.HeadArmor) continue;
             if (item.Tier != GetTierForLevel(occupation)) continue;
@@ -114,7 +123,7 @@ namespace LogRaamJousting.Armors
       private EquipmentElement GetLegArmorFor(string culture, ArmorTier occupation)
       {
          var bodyItems = new Items();
-         foreach (Decoupling.ItemObject item in new Items().All)
+         foreach (var item in _legArmor.All)
          {
             if (item.ItemType != ItemObject.ItemTypeEnum.LegArmor) continue;
             if (item.Tier != GetTierForLevel(occupation)) continue;

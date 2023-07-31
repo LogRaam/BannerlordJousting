@@ -5,6 +5,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
+using LogRaamJousting.Armors;
+using LogRaamJousting.Configuration;
 using LogRaamJousting.Decoupling;
 using LogRaamJousting.Factory;
 using SandBox.Tournaments.MissionLogics;
@@ -40,7 +42,7 @@ namespace LogRaamJousting
             LogRaamRandom.EvalPercentage(10),
             ref matchParticipants,
             new DefaultSetup(),
-            new DefaultKits()).Start();
+            new DefaultKits(new DefaultSetup(), new ConfigLoader(), new BaseArmoury())).Start();
 
          return false;
       }

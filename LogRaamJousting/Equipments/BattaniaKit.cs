@@ -2,8 +2,9 @@
 
 #region
 
-using System.Linq;
 using LogRaamJousting.Armors;
+using LogRaamJousting.Configuration;
+using LogRaamJousting.Decoupling;
 using LogRaamJousting.Factory;
 using LogRaamJousting.Stables;
 using LogRaamJousting.Weapons;
@@ -18,29 +19,31 @@ namespace LogRaamJousting.Equipments
    {
       private const string Culture = "Battania";
       private const int MountedChanceBonus = -20;
+
+
+      public TournamentParticipant ReferredParticipant;
       private readonly EquipmentPlugin _equipment;
       private readonly ISetup _get;
+      private readonly IConfigLoader _loader;
 
-      public BattaniaKit(ISetup setup, EquipmentPlugin equipment)
+      public BattaniaKit(ISetup setup, EquipmentPlugin equipment, IConfigLoader configLoader)
       {
          _get = setup;
          _equipment = equipment;
+         _loader = configLoader;
       }
 
       public BattaniaKit()
       {
          _get = new DefaultSetup();
-         _equipment = new EquipmentPlugin(new DefaultSetup());
+         _equipment = new EquipmentPlugin(_get, new Config(), Culture, new Participant(ref ReferredParticipant));
       }
-
-
-      public TournamentParticipant ReferredParticipant { get; set; }
 
       public Equipment Equip(IWeaponry weaponry, IArmoury armoury, IStable stable)
       {
          if (Runtime.IsCulturalEvent) _equipment.EquipCulturalEvent(weaponry, armoury, stable);
 
-         if (_get.Configuration.ParticipantsUsesTheirOwnEquipments(Culture)) return _equipment.Participant.RefToGameParticipant().Character.BattleEquipments.First();
+         if (_get.Configuration.ParticipantsUsesTheirOwnEquipments(Culture)) return _equipment.Participant.GetBattleEquipments();
 
          if (_equipment.Participant.IsPlayer) return _equipment.EquipPlayer(_get.ConfigLoader, Culture, weaponry, armoury, stable, MountedChanceBonus);
          if (_equipment.Participant.IsFactionLeader) return _equipment.EquipFactionLeader(_get.ConfigLoader, Culture, weaponry, armoury, stable);

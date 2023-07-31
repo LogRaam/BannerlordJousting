@@ -11,6 +11,13 @@ namespace LogRaamJousting.Armors
 {
    public class EmpireArmoury : BaseArmoury, IArmoury
    {
+      private readonly IBaseArmoury _baseArmoury;
+
+      public EmpireArmoury(IBaseArmoury baseArmoury)
+      {
+         _baseArmoury = baseArmoury;
+      }
+
       public (EquipmentElement bodyArmor, EquipmentElement headArmor, EquipmentElement shoes) RequestArmorForLevel(ArmorTier level)
       {
          return base.RequestArmorForLevel("Empire", level);

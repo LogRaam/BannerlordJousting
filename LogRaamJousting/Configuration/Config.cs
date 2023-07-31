@@ -21,8 +21,8 @@ namespace LogRaamJousting.Configuration
 
       public Config()
       {
-         _options = new CultureOptions();
          _loader = new ConfigLoader();
+         _options = new CultureOptions(_loader);
       }
 
       public ICultureOption GetSpecificOptionsFor(string culture)
@@ -53,7 +53,10 @@ namespace LogRaamJousting.Configuration
 
       public bool IsHostEnforcingHisCulture(string hostCulture)
       {
-         return ShouldApplyModForThisMatch(hostCulture) && GetSpecificOptionsFor(hostCulture).ShouldUseHostCulture(_loader.RetrieveConfigDetails());
+         var a = ShouldApplyModForThisMatch(hostCulture);
+         var b = GetSpecificOptionsFor(hostCulture).ShouldUseHostCulture(_loader.RetrieveConfigDetails());
+
+         return a && b;
       }
 
       public bool IsPlayerMayShouldGainRenownWhenWinningTournament()

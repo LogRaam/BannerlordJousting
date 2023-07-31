@@ -101,6 +101,7 @@
     <Compile Include="Armors\BattaniaArmoury.cs" />
     <Compile Include="Armors\EmpireArmoury.cs" />
     <Compile Include="Armors\IArmoury.cs" />
+    <Compile Include="Armors\IBaseArmoury.cs" />
     <Compile Include="Armors\KhuzaitArmoury.cs" />
     <Compile Include="Armors\SturgiaArmoury.cs" />
     <Compile Include="Armors\VlandiaArmoury.cs" />
