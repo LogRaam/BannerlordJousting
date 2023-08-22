@@ -14,7 +14,7 @@ namespace LogRaamJousting
    {
       public void ShowMessage(string msg, Color? color = null)
       {
-         if (color == null) color = Color.White;
+         color ??= Color.White;
 
          InformationManager.DisplayMessage(new InformationMessage(msg, color.Value));
       }

@@ -12,13 +12,6 @@ namespace LogRaamJousting.Options
    {
       private readonly IConfigLoader _loader;
 
-      /*
-      public CultureOptions()
-      {
-         _loader = new ConfigLoader();
-      }
-      */
-
       public CultureOptions(IConfigLoader loader)
       {
          _loader = loader;

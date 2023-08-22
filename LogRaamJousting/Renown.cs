@@ -13,7 +13,9 @@ namespace LogRaamJousting
    {
       public void GiveBonusRenown(Hero hero, float renown)
       {
-         Clan clan = hero.Clan;
+         if (hero.Clan == null) return;
+
+         var clan = hero.Clan;
          clan.Renown += MathF.Round(renown);
       }
    }
